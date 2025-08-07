@@ -1,7 +1,7 @@
 {
   "name": "mcp-handler",
   "version": "1.0.1",
-  "description": "Vercel MCP Adapter for Next.js and other frameworks",
+  "description": "Vercel and Cloudflare MCP Adapter for Next.js and other frameworks",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "commonjs",
@@ -62,7 +62,10 @@
   "keywords": [
     "mcp",
     "vercel",
+    "cloudflare",
+    "workers",
     "next.js",
+    "edge",
     "ai"
   ],
   "author": "Vercel",

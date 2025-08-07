@@ -1,2 +1,22 @@
 dist
 node_modules
+
+# Cloudflare Workers
+.wrangler
+wrangler-config.toml
+worker-configuration.d.ts
+
+# Next.js
+.next
+.vercel
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# OS files
+.DS_Store
+Thumbs.db
