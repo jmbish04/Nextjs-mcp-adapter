@@ -1,0 +1,23 @@
+{
+  "name": "advanced-cloudflare-mcp-example",
+  "version": "1.0.0",
+  "description": "Advanced MCP server example for Cloudflare Workers",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "build": "tsc",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "mcp-handler": "file:../../",
+    "@modelcontextprotocol/sdk": "^1.17.1",
+    "zod": "^3.25.50"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241218.0",
+    "typescript": "^5.0.0",
+    "wrangler": "^3.78.12",
+    "vitest": "^3.2.1"
+  }
+}
