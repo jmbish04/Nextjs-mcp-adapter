@@ -13,3 +13,8 @@ export {
   generateProtectedResourceMetadata,
   metadataCorsOptionsRequestHandler,
 } from "./auth/auth-metadata";
+
+// Export Cloudflare-compatible handlers
+export { createCloudflareHandler } from "./cloudflare";
+export type { CloudflareConfig } from "./cloudflare/handler";
+export { isCloudflareWorkers } from "./cloudflare/runtime";

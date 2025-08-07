@@ -1,0 +1,29 @@
+# Cloudflare Workers Configuration for MCP Handler
+
+name = "mcp-handler-example"
+compatibility_date = "2024-08-07"
+compatibility_flags = ["nodejs_compat"]
+
+# Main script for the worker
+main = "worker.ts"
+
+# Environment variables
+[vars]
+NODE_ENV = "production"
+
+# KV namespace for session storage
+[[kv_namespaces]]
+binding = "MCP_SESSIONS"
+id = "your-kv-namespace-id-here"
+preview_id = "your-preview-kv-namespace-id-here"
+
+# Build configuration
+[build]
+command = "npm run build"
+cwd = "./"
+
+# Routes configuration (optional)
+# Uncomment and modify if you want custom routing
+# [[routes]]
+# pattern = "example.com/api/*"
+# zone_name = "example.com"

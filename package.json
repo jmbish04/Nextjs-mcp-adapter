@@ -21,11 +21,19 @@
     },
     "./next": {
       "types": {
-        "import": "./dist/index.d.mts",
-        "require": "./dist/index.d.cjs"
+        "import": "./dist/next/index.d.mts",
+        "require": "./dist/next/index.d.cjs"
       },
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+      "import": "./dist/next/index.mjs",
+      "require": "./dist/next/index.js"
+    },
+    "./cloudflare": {
+      "types": {
+        "import": "./dist/cloudflare/index.d.mts",
+        "require": "./dist/cloudflare/index.d.cjs"
+      },
+      "import": "./dist/cloudflare/index.mjs",
+      "require": "./dist/cloudflare/index.js"
     }
   },
   "files": [
@@ -41,7 +49,10 @@
   },
   "scripts": {
     "build": "tsup",
+    "build:cloudflare": "next build && @cloudflare/next-on-pages",
     "dev": "tsup --watch",
+    "dev:cloudflare": "wrangler pages dev",
+    "deploy:cloudflare": "wrangler pages deploy",
     "test": "vitest run",
     "test:watch": "vitest watch",
     "version-packages": "changeset version",
@@ -63,10 +74,12 @@
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.12",
+    "@cloudflare/next-on-pages": "^1.13.5",
     "@types/node": "^22.15.8",
     "tsup": "^8.0.0",
     "typescript": "^5.0.0",
     "vitest": "^3.2.1",
+    "wrangler": "^3.78.12",
     "zod": "^3.25.50"
   },
   "peerDependencies": {

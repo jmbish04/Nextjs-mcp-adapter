@@ -1,6 +1,6 @@
 # mcp-handler
 
-A Vercel adapter for the Model Context Protocol (MCP), enabling real-time communication between your applications and AI models. Currently supports Next.js with more framework adapters coming soon.
+A Vercel and Cloudflare adapter for the Model Context Protocol (MCP), enabling real-time communication between your applications and AI models. Supports Next.js and Cloudflare Workers with more framework adapters coming soon.
 
 ## Installation
 
@@ -12,6 +12,99 @@ yarn add mcp-handler @modelcontextprotocol/sdk zod@^3
 pnpm add mcp-handler @modelcontextprotocol/sdk zod@^3
 # or
 bun add mcp-handler @modelcontextprotocol/sdk zod@^3
+```
+
+For Cloudflare Workers deployment, also install:
+
+```bash
+npm install -D @cloudflare/next-on-pages wrangler
+```
+
+## Cloudflare Workers Usage
+
+For Cloudflare Workers, use the specialized Cloudflare adapter:
+
+```typescript
+// worker.ts
+import { createCloudflareHandler } from "mcp-handler/cloudflare";
+import { z } from "zod";
+
+export interface Env {
+  MCP_SESSIONS: KVNamespace;
+}
+
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    // Handle CORS preflight
+    if (request.method === 'OPTIONS') {
+      return new Response(null, {
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        },
+      });
+    }
+
+    const handler = createCloudflareHandler(
+      (server) => {
+        server.tool(
+          "echo",
+          "Echo a message",
+          {
+            message: z.string(),
+          },
+          async ({ message }) => {
+            return {
+              content: [{ type: "text", text: `Echo: ${message}` }],
+            };
+          }
+        );
+      },
+      {
+        serverInfo: {
+          name: "cloudflare-mcp-server",
+          version: "1.0.0",
+        },
+      },
+      {
+        kvNamespace: env.MCP_SESSIONS,
+        verboseLogs: true,
+        basePath: "/api",
+      }
+    );
+
+    return handler(request, env);
+  },
+};
+```
+
+### Cloudflare Pages with Next.js
+
+For Next.js apps deployed to Cloudflare Pages:
+
+```typescript
+// app/api/[transport]/route.ts
+import { createCloudflareHandler } from "mcp-handler/cloudflare";
+
+export const runtime = 'edge';
+
+export interface CloudflareEnv {
+  MCP_SESSIONS: KVNamespace;
+}
+
+const handler = createCloudflareHandler(
+  (server) => {
+    // Your server configuration
+  },
+  {}, // Server options
+  {
+    kvNamespace: (process.env as any).MCP_SESSIONS,
+    basePath: "/api",
+  }
+);
+
+export { handler as GET, handler as POST };
 ```
 
 ## Next.js Usage
@@ -266,16 +359,120 @@ which by default is `/.well-known/oauth-protected-resource` (the full URL will b
 
 ## Features
 
-- **Framework Support**: Currently supports Next.js with more framework adapters coming soon
-- **Multiple Transport Options**: Supports both Streamable HTTP and Server-Sent Events (SSE) transports
-- **Redis Integration**: For SSE transport resumability
+- **Framework Support**: Supports Next.js and Cloudflare Workers with more framework adapters coming soon
+- **Multiple Transport Options**: Supports both Streamable HTTP and Server-Sent Events (SSE) transports  
+- **Redis Integration**: For SSE transport resumability (Vercel) or KV storage (Cloudflare)
+- **Edge Runtime Compatible**: Works in Cloudflare Workers and Cloudflare Pages
 - **TypeScript Support**: Full TypeScript support with type definitions
+
+## Cloudflare Workers Deployment
+
+### 1. Configuration
+
+Create a `wrangler.toml` file in your project root:
+
+```toml
+name = "mcp-handler"
+compatibility_date = "2024-08-07"
+compatibility_flags = ["nodejs_compat"]
+
+# KV namespace for session storage
+[[kv_namespaces]]
+binding = "MCP_SESSIONS"
+id = "your-kv-namespace-id"
+preview_id = "your-preview-kv-namespace-id"
+
+[build]
+command = "npm run build"
+```
+
+### 2. Create a Worker Script
+
+```typescript
+// worker.ts
+import { createCloudflareHandler } from 'mcp-handler/cloudflare';
+
+export default {
+  async fetch(request: Request, env: any): Promise<Response> {
+    const handler = createCloudflareHandler(
+      (server) => {
+        // Configure your tools here
+      },
+      {},
+      {
+        kvNamespace: env.MCP_SESSIONS,
+        verboseLogs: true,
+      }
+    );
+    return handler(request, env);
+  },
+};
+```
+
+### 3. Deploy
+
+```bash
+# Install Wrangler CLI
+npm install -g wrangler
+
+# Login to Cloudflare
+wrangler login
+
+# Create KV namespace
+wrangler kv:namespace create "MCP_SESSIONS"
+
+# Deploy your worker
+wrangler deploy
+```
+
+### 4. Cloudflare Pages with Next.js
+
+For Next.js apps on Cloudflare Pages:
+
+```bash
+# Install dependencies
+npm install @cloudflare/next-on-pages
+
+# Build for Cloudflare Pages
+npx @cloudflare/next-on-pages
+
+# Deploy to Cloudflare Pages
+wrangler pages deploy .vercel/output/static
+```
+
+## Environment Variables
+
+### Vercel/Next.js
+- `REDIS_URL`: Redis connection string for session storage
+- `NODE_ENV`: Environment mode
+
+### Cloudflare Workers
+- `MCP_SESSIONS`: KV namespace binding for session storage
+- Configure in `wrangler.toml` or Cloudflare dashboard
+
+## Runtime Compatibility
+
+### Cloudflare Workers Limitations
+- Uses Web Standards APIs instead of Node.js APIs
+- KV storage for session persistence (replaces Redis)
+- Edge runtime compatible
+- No file system access
+- Different environment variable access
+
+### Supported Features
+- ✅ Streamable HTTP transport
+- ✅ SSE transport with KV storage
+- ✅ Authentication and authorization
+- ✅ Tool registration and execution
+- ✅ TypeScript support
+- ⚠️ Redis replaced with KV storage in Cloudflare environment
 
 ## Requirements
 
-- Next.js 13 or later (for Next.js adapter)
-- Node.js 18 or later
-- Redis (optional, for SSE transport)
+- **Next.js**: 13 or later (for Next.js adapter)
+- **Node.js**: 18 or later (for local development)
+- **Cloudflare Workers**: Compatible with latest runtime
+- **Storage**: Redis (Vercel) or KV namespace (Cloudflare)
 
 ## License
 

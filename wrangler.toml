@@ -1,0 +1,34 @@
+# Cloudflare Workers configuration for MCP Adapter
+
+name = "mcp-handler"
+compatibility_date = "2024-08-07"
+compatibility_flags = ["nodejs_compat"]
+
+# Enable Node.js compatibility for better compatibility with existing code
+# This provides access to some Node.js APIs in the Workers runtime
+[env.production]
+compatibility_flags = ["nodejs_compat", "experimental"]
+
+# Environment variables (configure these in your Cloudflare dashboard)
+[vars]
+# Add your environment variables here
+# REDIS_URL = "your-redis-url-or-kv-namespace"
+
+# KV namespace bindings for session storage (alternative to Redis)
+[[kv_namespaces]]
+binding = "MCP_SESSIONS"
+id = "your-kv-namespace-id"
+preview_id = "your-preview-kv-namespace-id"
+
+# Durable Objects for advanced session management (optional)
+# [[durable_objects.bindings]]
+# name = "MCP_SESSIONS"
+# class_name = "McpSessionManager"
+
+# Limits
+[limits]
+cpu_ms = 50000
+
+# Build configuration for Next.js on Pages
+[build]
+command = "npm run build:cloudflare"
